@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>TDS & GST Calculator</title>
+<style>
+  :root{
+    --blue:#0b74c4;          /* oceanic primary */
+    --blue-2:#065a9e;        /* dark */
+    --blue-3:#e7f3ff;        /* pale */
+    --ink:#1b2a3a;
+    --muted:#6b7a8a;
+    --bg:#f4f9fd;
+    --card:#ffffff;
+    --ring:#d6e6f5;
+    --danger:#c63d3d;        /* not pure red */
+    --teal:#009688;          /* add row */
+    --violet:#6c63ff;        /* download */
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
+  a{color:inherit}
+
+  /* Header */
+  header{background:linear-gradient(90deg,var(--blue),#1398ff);color:#fff;padding:18px 16px;text-align:center;position:sticky;top:0;z-index:10;box-shadow:0 6px 20px rgba(0,0,0,.08)}
+  header h1{margin:0;font-size:22px;letter-spacing:.3px}
+
+  /* Layout */
+  #page{max-width:1200px;margin:22px auto;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--ring);border-radius:14px;box-shadow:0 10px 26px rgba(11,116,196,.06)}
+  .hero{padding:16px 16px 8px}
+  .hero h2{margin:0 0 6px}
+  .hero p{margin:0;color:var(--muted)}
+
+  /* Controls */
+  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+  .btn{appearance:none;border:1px solid transparent;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(11,116,196,.16)}
+  .btn-add{background:var(--teal);color:#fff}
+  .btn-download{background:var(--violet);color:#fff}
+  .btn-remove{background:var(--danger);color:#fff;border-color:#d67c7c}
+  .btn:active{transform:translateY(1px)}
+
+  /* Info */
+  .infobox{background:var(--blue-3);border:1px dashed #b9dafd;color:#0e406a;padding:12px;border-radius:12px;margin:10px 0}
+  .infobox b{color:#0b4470}
+
+  /* Table */
+  table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--ring);border-radius:14px;overflow:hidden}
+  thead th{background:#e6f2fb;color:#0b4470;font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:.4px;padding:10px;border-bottom:1px solid var(--ring)}
+  tbody td, tfoot td{border-bottom:1px solid #eef4fb;padding:8px 8px;text-align:center}
+  tbody tr:hover{background:#f9fcff}
+  tfoot td{font-weight:800;background:#f3f8fe}
+  .narrow{width:56px}
+  .right{text-align:right}
+
+  select, input[type="number"]{width:100%;padding:8px;border:1px solid #dfe8f2;border-radius:10px;background:#fff;outline:none}
+  select:focus, input[type="number"]:focus{box-shadow:0 0 0 3px #cfe8ff;border-color:#9ed0ff}
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button{appearance:none;margin:0}
+
+  /* Footer */
+  footer{margin:26px 0;color:#fff;background:var(--blue-2);padding:14px;text-align:center;border-top:4px solid var(--blue)}
+  footer small{opacity:.98}
+
+  /* Print helpers */
+  @media print{
+    .controls{display:none}
+    header{position:static;box-shadow:none}
+    body{background:#fff}
+    .card{box-shadow:none}
+  }
+
+  /* Responsive */
+  @media (max-width: 720px){
+    thead th:nth-child(5), tbody td:nth-child(5),
+    thead th:nth-child(6), tbody td:nth-child(6),
+    thead th:nth-child(7), tbody td:nth-child(7){display:none}
+  }
+</style>
+<!-- High‑quality client‑side PDF (includes header & footer) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-YcsIP8qQ8iD3fXyUQqkQy6yZP7c9bQFspQqYc7BubQyB1pPuBQm7gkH4F3gK9u6V9eVQ0C0k3Zb0+JrYp7XhIQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <header><h1>TDS & GST Calculator</h1></header>
+  <div id="page">
+    <section class="card hero" id="captureAll">
+      <h2>Invoice Calculation</h2>
+      <p>Select an <b>Item Name</b> and enter <b>Total Price</b>. All other fields auto-calculate. Add as many rows as needed.</p>
+
+      <div class="controls">
+        <button class="btn btn-add" id="addRowBtn">+ Add Row</button>
+        <button onclick="window.print()" class="btn btn-download" id="downloadPdfBtn">SAVE AS PDF</button>
+      </div>
+
+      <div class="infobox">
+        <b>GST & TDS (India) — quick note:</b> TDS on certain supplies is typically <b>2%</b> of the <i>taxable value</i> (basic price). For intrastate supplies, GST splits into <b>SGST</b> and <b>CGST</b> equally; for interstate, <b>IGST</b> applies (not shown here). Always verify latest rules before filing GSTR‑7. This is only an informational summary.
+      </div>
+
+      <table id="calcTable">
+        <thead>
+          <tr>
+            <th class="narrow">#</th>
+            <th>Item Name</th>
+            <th>GST Rate</th>
+            <th>Total Price</th>
+            <th>Basic Price</th>
+            <th>SGST</th>
+            <th>CGST</th>
+            <th>Total Bill Price</th>
+            <th>TDS Deduction 2%</th>
+            <th>Bank Transfer</th>
+            <th class="narrow">Action</th>
+          </tr>
+        </thead>
+        <tbody id="calcBody"></tbody>
+        <tfoot>
+          <tr>
+            <td colspan="8" class="right">Grand Total</td>
+            <td id="totalTDS">0.00</td>
+            <td id="totalBank">0.00</td>
+            <td></td>
+          </tr>
+        </tfoot>
+      </table>
+    </section>
+
+    <footer>
+      <small>Software developed by <b>S World The Complete Accounting Solutions, Balaghat</b>. Mobile No.: <b>8319601616</b></small>
+    </footer>
+  </div>
+
+<script>
+// Locked dropdown options from your Excel (V8:V17)
+const ITEM_RATES = {
+  'CEMENT': 28,
+  'LOHA': 18,
+  'MURUM': 5,
+  'RET': 5,
+  'JCB SERVICE': 18,
+  'GITTI': 5,
+  'BRICKS': 12,
+  'OTHER SERVICES': 18,
+'TILES': 18,
+'TAAR': 18,
+'BRUSH': 18,
+'LABOUR CHARGE': 18,
+'FURNITURE': 18,
+'ELECTRONICS ITEMS': 18,
+  'PAINT': 18,
+  'PAINTING SERVICE': 18
+
+};
+
+const bodyEl = document.getElementById('calcBody');
+const totalTdsEl = document.getElementById('totalTDS');
+const totalBankEl = document.getElementById('totalBank');
+
+function fmt(n){ return (isFinite(n)? Number(n).toFixed(2) : '0.00'); }
+
+function recalc(){
+  let tTds = 0, tBank = 0;
+  [...bodyEl.querySelectorAll('tr')].forEach((tr, idx) => {
+    tr.querySelector('.rownum').textContent = idx + 1;
+    const sel = tr.querySelector('select');
+    const rateCell = tr.querySelector('.gst');
+    const priceInput = tr.querySelector('.totalPrice');
+    const basicCell = tr.querySelector('.basic');
+    const sgstCell = tr.querySelector('.sgst');
+    const cgstCell = tr.querySelector('.cgst');
+    const totalBillCell = tr.querySelector('.totalBill');
+    const tdsCell = tr.querySelector('.tds');
+    const bankCell = tr.querySelector('.bank');
+
+    const item = sel.value;
+    const gstRate = ITEM_RATES[item] || 0;
+    rateCell.textContent = gstRate + '%';
+
+    const total = parseFloat(priceInput.value) || 0;
+    const basic = gstRate > 0 ? (total / (1 + gstRate/100)) : 0;
+    const sg = basic * (gstRate/2) / 100;
+    const cg = sg;
+    const bill = basic + sg + cg; // equals total if inputs consistent
+    const tds = basic * 0.02;     // 2% of basic value
+    const bank = bill - tds;      // matches Excel: G - H
+
+    basicCell.textContent = fmt(basic);
+    sgstCell.textContent = fmt(sg);
+    cgstCell.textContent = fmt(cg);
+    totalBillCell.textContent = fmt(bill);
+    tdsCell.textContent = fmt(tds);
+    bankCell.textContent = fmt(bank);
+
+    tTds += tds; tBank += bank;
+  });
+  totalTdsEl.textContent = fmt(tTds);
+  totalBankEl.textContent = fmt(tBank);
+}
+
+function makeRow(){
+  const tr = document.createElement('tr');
+  tr.innerHTML = `
+    <td class="rownum narrow">1</td>
+    <td>
+      <select aria-label="Item Name">
+        ${Object.keys(ITEM_RATES).map(i => `<option value="${i}">${i}</option>`).join('')}
+      </select>
+    </td>
+    <td class="gst">0%</td>
+    <td><input class="totalPrice" type="number" min="0" step="0.01" placeholder="0.00" /></td>
+    <td class="basic">0.00</td>
+    <td class="sgst">0.00</td>
+    <td class="cgst">0.00</td>
+    <td class="totalBill">0.00</td>
+    <td class="tds">0.00</td>
+    <td class="bank">0.00</td>
+    <td class="narrow"><button type="button" class="btn btn-remove rm">Remove</button></td>
+  `;
+  const sel = tr.querySelector('select');
+  const inp = tr.querySelector('.totalPrice');
+  sel.addEventListener('change', recalc);
+  inp.addEventListener('input', recalc);
+  tr.querySelector('.rm').addEventListener('click', () => { tr.remove(); recalc(); });
+  return tr;
+}
+
+function addRow(){ bodyEl.appendChild(makeRow()); recalc(); }
+
+document.getElementById('addRowBtn').addEventListener('click', addRow);
+
+// PDF: capture full page content (header + card + footer)
+function downloadPDF(){
+  const element = document.getElementById('page');
+  const opt = {
+    margin:       [0.5, 0.5, 0.5, 0.5],
+    filename:     'TDS_GST_Calculator.pdf',
+    image:        { type: 'jpeg', quality: 1 },
+    html2canvas:  { scale: 3, background: '#ffffff' },
+    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['css','legacy'] }
+  };
+  html2pdf().set(opt).from(element).save();
+}
+
+document.getElementById('downloadPdfBtn').addEventListener('click', downloadPDF);
+
+// boot with one row
+addRow();
+</script>
+</body>
+</html>
