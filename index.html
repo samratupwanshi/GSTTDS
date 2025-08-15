@@ -1,251 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>TDS & GST Calculator</title>
-<style>
-  :root{
-    --blue:#0b74c4;          /* oceanic primary */
-    --blue-2:#065a9e;        /* dark */
-    --blue-3:#e7f3ff;        /* pale */
-    --ink:#1b2a3a;
-    --muted:#6b7a8a;
-    --bg:#f4f9fd;
-    --card:#ffffff;
-    --ring:#d6e6f5;
-    --danger:#c63d3d;        /* not pure red */
-    --teal:#009688;          /* add row */
-    --violet:#6c63ff;        /* download */
-  }
-  *{box-sizing:border-box}
-  html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Arial,sans-serif}
-  a{color:inherit}
-
-  /* Header */
-  header{background:linear-gradient(90deg,var(--blue),#1398ff);color:#fff;padding:18px 16px;text-align:center;position:sticky;top:0;z-index:10;box-shadow:0 6px 20px rgba(0,0,0,.08)}
-  header h1{margin:0;font-size:22px;letter-spacing:.3px}
-
-  /* Layout */
-  #page{max-width:1200px;margin:22px auto;padding:0 16px}
-  .card{background:var(--card);border:1px solid var(--ring);border-radius:14px;box-shadow:0 10px 26px rgba(11,116,196,.06)}
-  .hero{padding:16px 16px 8px}
-  .hero h2{margin:0 0 6px}
-  .hero p{margin:0;color:var(--muted)}
-
-  /* Controls */
-  .controls{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
-  .btn{appearance:none;border:1px solid transparent;border-radius:10px;padding:10px 14px;font-weight:700;cursor:pointer;box-shadow:0 4px 12px rgba(11,116,196,.16)}
-  .btn-add{background:var(--teal);color:#fff}
-  .btn-download{background:var(--violet);color:#fff}
-  .btn-remove{background:var(--danger);color:#fff;border-color:#d67c7c}
-  .btn:active{transform:translateY(1px)}
-
-  /* Info */
-  .infobox{background:var(--blue-3);border:1px dashed #b9dafd;color:#0e406a;padding:12px;border-radius:12px;margin:10px 0}
-  .infobox b{color:#0b4470}
-
-  /* Table */
-  table{width:100%;border-collapse:separate;border-spacing:0;background:var(--card);border:1px solid var(--ring);border-radius:14px;overflow:hidden}
-  thead th{background:#e6f2fb;color:#0b4470;font-weight:700;text-transform:uppercase;font-size:12px;letter-spacing:.4px;padding:10px;border-bottom:1px solid var(--ring)}
-  tbody td, tfoot td{border-bottom:1px solid #eef4fb;padding:8px 8px;text-align:center}
-  tbody tr:hover{background:#f9fcff}
-  tfoot td{font-weight:800;background:#f3f8fe}
-  .narrow{width:56px}
-  .right{text-align:right}
-
-  select, input[type="number"]{width:100%;padding:8px;border:1px solid #dfe8f2;border-radius:10px;background:#fff;outline:none}
-  select:focus, input[type="number"]:focus{box-shadow:0 0 0 3px #cfe8ff;border-color:#9ed0ff}
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button{appearance:none;margin:0}
-
-  /* Footer */
-  footer{margin:26px 0;color:#fff;background:var(--blue-2);padding:14px;text-align:center;border-top:4px solid var(--blue)}
-  footer small{opacity:.98}
-
-  /* Print helpers */
-  @media print{
-    .controls{display:none}
-    header{position:static;box-shadow:none}
-    body{background:#fff}
-    .card{box-shadow:none}
-  }
-
-  /* Responsive */
-  @media (max-width: 720px){
-    thead th:nth-child(5), tbody td:nth-child(5),
-    thead th:nth-child(6), tbody td:nth-child(6),
-    thead th:nth-child(7), tbody td:nth-child(7){display:none}
-  }
-</style>
-<!-- High‑quality client‑side PDF (includes header & footer) -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js" integrity="sha512-YcsIP8qQ8iD3fXyUQqkQy6yZP7c9bQFspQqYc7BubQyB1pPuBQm7gkH4F3gK9u6V9eVQ0C0k3Zb0+JrYp7XhIQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>GST Lookup & Payouts</title>
+  <style>
+    /* Your oceanic theme and layout from before… */
+    body { margin:0; font-family: Inter, sans-serif; background: linear-gradient(180deg,#f2f9ff,#fff); color:#0b2740; }
+    header { background: linear-gradient(90deg,#0b74c4,#065a9e); color:#fff; padding:18px 20px; display:flex; justify-content:space-between; align-items:center; }
+    header h1 { margin:0; font-size:18px; }
+    header .subtitle { font-size:12px; opacity:0.95; }
+    .btn { background:#0b74c4; color:#fff; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
+    .btn.secondary { background:#eef6fb; color:#065a9e; border:1px solid rgba(11,116,196,0.08); }
+    .container { display:grid; grid-template-columns:1fr 360px; gap:18px; max-width:1100px; margin:20px auto; padding:18px; }
+    .panel { background:#fff; border-radius:8px; padding:16px; box-shadow:0 6px 20px rgba(11,116,196,0.06); }
+    input[type=text] { width:100%; padding:10px; border-radius:8px; border:1px solid #e6eef9; }
+    .muted { font-size:13px; color:#6b7280; }
+    .result-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+    .field { background:linear-gradient(180deg,#fff,#fbfdff); border-radius:8px; padding:10px; border:1px solid #eef6fb; font-size:13px; }
+    table.prev { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
+    table.prev th, table.prev td { padding:8px; text-align:left; border-bottom:1px dashed #eef6fb; }
+    footer { text-align:center; font-size:13px; color:#6b7280; padding:14px 20px; margin-top:20px; }
+    @media(max-width:980px) { .container { grid-template-columns:1fr; } }
+  </style>
 </head>
 <body>
-  <header><h1>TDS & GST Calculator</h1></header>
-  <div id="page">
-    <section class="card hero" id="captureAll">
-      <h2>Invoice Calculation</h2>
-      <p>Select an <b>Item Name</b> and enter <b>Total Price</b>. All other fields auto-calculate. Add as many rows as needed.</p>
+<header>
+  <div><h1>GST Lookup & Payouts</h1><div class="subtitle">Software developed by S World — Complete Accounting Solutions</div></div>
+</header>
 
-      <div class="controls">
-        <button class="btn btn-add" id="addRowBtn">+ Add Row</button>
-        <button onclick="window.print()" class="btn btn-download" id="downloadPdfBtn">SAVE AS PDF</button>
+<main class="container">
+  <!-- Left panel -->
+  <section class="panel">
+    <h3>Search GST Number</h3>
+    <div class="muted">Enter 15-digit GSTIN and press Search.</div>
+    <div style="margin-top:12px;">
+      <input id="gstInput" type="text" placeholder="Example: 06AACCG0527D1Z8" maxlength="15" />
+      <button id="searchBtn" class="btn">Search</button>
+    </div>
+    <div id="message" class="muted" style="margin-top:10px;"></div>
+    <div id="result" style="display:none; margin-top:14px;">
+      <h4>GST Details</h4>
+      <div class="result-grid">
+        <div class="field"><strong>GSTIN</strong><div id="r_gstin"></div></div>
+        <div class="field"><strong>Legal Name</strong><div id="r_legal"></div></div>
+        <div class="field"><strong>Trade Name</strong><div id="r_trade"></div></div>
+        <div class="field"><strong>Status</strong><div id="r_status"></div></div>
+        <div class="field"><strong>Reg. Date</strong><div id="r_reg"></div></div>
+        <div class="field"><strong>Last Update</strong><div id="r_last"></div></div>
+        <div class="field"><strong>Type</strong><div id="r_type"></div></div>
+        <div class="field"><strong>Business Type</strong><div id="r_btype"></div></div>
       </div>
+      <h4 style="margin-top:12px;">Address</h4>
+      <div class="field" id="r_address"></div>
+    </div>
+  </section>
 
-      <div class="infobox">
-        <b>GST & TDS (India) — quick note:</b> TDS on certain supplies is typically <b>2%</b> of the <i>taxable value</i> (basic price). For intrastate supplies, GST splits into <b>SGST</b> and <b>CGST</b> equally; for interstate, <b>IGST</b> applies (not shown here). Always verify latest rules before filing GSTR‑7. This is only an informational summary.
-      </div>
+  <!-- Right panel -->
+  <aside class="panel">
+    <h3>Previous Lookups</h3>
+    <table class="prev" id="prevTable">
+      <thead><tr><th>GSTIN</th><th>Legal Name</th><th>Date</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </aside>
+</main>
 
-      <table id="calcTable">
-        <thead>
-          <tr>
-            <th class="narrow">#</th>
-            <th>Item Name</th>
-            <th>GST Rate</th>
-            <th>Total Price</th>
-            <th>Basic Price</th>
-            <th>SGST</th>
-            <th>CGST</th>
-            <th>Total Bill Price</th>
-            <th>TDS Deduction 2%</th>
-            <th>Bank Transfer</th>
-            <th class="narrow">Action</th>
-          </tr>
-        </thead>
-        <tbody id="calcBody"></tbody>
-        <tfoot>
-          <tr>
-            <td colspan="8" class="right">Grand Total</td>
-            <td id="totalTDS">0.00</td>
-            <td id="totalBank">0.00</td>
-            <td></td>
-          </tr>
-        </tfoot>
-      </table>
-    </section>
-
-    <footer>
-      <small>Software developed by <b>S World The Complete Accounting Solutions, Balaghat</b>. Mobile No.: <b>8319601616</b></small>
-    </footer>
-  </div>
+<footer>© Utsaah Foundation — built for quick GST checks.</footer>
 
 <script>
-// Locked dropdown options from your Excel (V8:V17)
-const ITEM_RATES = {
-  'CEMENT': 28,
-  'LOHA': 18,
-  'MURUM': 5,
-  'RET': 5,
-  'JCB SERVICE': 18,
-  'GITTI': 5,
-  'BRICKS': 12,
-  'OTHER SERVICES': 18,
-'TILES': 18,
-'TAAR': 18,
-'BRUSH': 18,
-'LABOUR CHARGE': 18,
-'FURNITURE': 18,
-'ELECTRONICS ITEMS': 18,
-  'PAINT': 18,
-  'PAINTING SERVICE': 18
-
-};
-
-const bodyEl = document.getElementById('calcBody');
-const totalTdsEl = document.getElementById('totalTDS');
-const totalBankEl = document.getElementById('totalBank');
-
-function fmt(n){ return (isFinite(n)? Number(n).toFixed(2) : '0.00'); }
-
-function recalc(){
-  let tTds = 0, tBank = 0;
-  [...bodyEl.querySelectorAll('tr')].forEach((tr, idx) => {
-    tr.querySelector('.rownum').textContent = idx + 1;
-    const sel = tr.querySelector('select');
-    const rateCell = tr.querySelector('.gst');
-    const priceInput = tr.querySelector('.totalPrice');
-    const basicCell = tr.querySelector('.basic');
-    const sgstCell = tr.querySelector('.sgst');
-    const cgstCell = tr.querySelector('.cgst');
-    const totalBillCell = tr.querySelector('.totalBill');
-    const tdsCell = tr.querySelector('.tds');
-    const bankCell = tr.querySelector('.bank');
-
-    const item = sel.value;
-    const gstRate = ITEM_RATES[item] || 0;
-    rateCell.textContent = gstRate + '%';
-
-    const total = parseFloat(priceInput.value) || 0;
-    const basic = gstRate > 0 ? (total / (1 + gstRate/100)) : 0;
-    const sg = basic * (gstRate/2) / 100;
-    const cg = sg;
-    const bill = basic + sg + cg; // equals total if inputs consistent
-    const tds = basic * 0.02;     // 2% of basic value
-    const bank = bill - tds;      // matches Excel: G - H
-
-    basicCell.textContent = fmt(basic);
-    sgstCell.textContent = fmt(sg);
-    cgstCell.textContent = fmt(cg);
-    totalBillCell.textContent = fmt(bill);
-    tdsCell.textContent = fmt(tds);
-    bankCell.textContent = fmt(bank);
-
-    tTds += tds; tBank += bank;
-  });
-  totalTdsEl.textContent = fmt(tTds);
-  totalBankEl.textContent = fmt(tBank);
+function validateGSTIN(g) {
+  return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g);
 }
 
-function makeRow(){
-  const tr = document.createElement('tr');
-  tr.innerHTML = `
-    <td class="rownum narrow">1</td>
-    <td>
-      <select aria-label="Item Name">
-        ${Object.keys(ITEM_RATES).map(i => `<option value="${i}">${i}</option>`).join('')}
-      </select>
-    </td>
-    <td class="gst">0%</td>
-    <td><input class="totalPrice" type="number" min="0" step="0.01" placeholder="0.00" /></td>
-    <td class="basic">0.00</td>
-    <td class="sgst">0.00</td>
-    <td class="cgst">0.00</td>
-    <td class="totalBill">0.00</td>
-    <td class="tds">0.00</td>
-    <td class="bank">0.00</td>
-    <td class="narrow"><button type="button" class="btn btn-remove rm">Remove</button></td>
-  `;
-  const sel = tr.querySelector('select');
-  const inp = tr.querySelector('.totalPrice');
-  sel.addEventListener('change', recalc);
-  inp.addEventListener('input', recalc);
-  tr.querySelector('.rm').addEventListener('click', () => { tr.remove(); recalc(); });
-  return tr;
+document.getElementById('searchBtn').addEventListener('click', searchGST);
+document.getElementById('gstInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') searchGST();
+});
+
+function searchGST() {
+  const gst = document.getElementById('gstInput').value.trim().toUpperCase();
+  const msg = document.getElementById('message');
+  const res = document.getElementById('result');
+
+  msg.textContent = ''; res.style.display = 'none';
+  if (!validateGSTIN(gst)) {
+    msg.textContent = 'Invalid GSTIN format';
+    return;
+  }
+
+  fetch(`backend.php?gstin=${gst}`)
+    .then(r => r.json())
+    .then(json => {
+      if (!(json.flag && json.data)) {
+        msg.textContent = json.message || 'Not found';
+        return;
+      }
+      const d = json.data;
+      msg.textContent = '';
+      document.getElementById('r_gstin').textContent = d.gstin;
+      document.getElementById('r_legal').textContent = d.lgnm;
+      document.getElementById('r_trade').textContent = d.tradeNam;
+      document.getElementById('r_status').textContent = d.sts;
+      document.getElementById('r_reg').textContent = d.rgdt;
+      document.getElementById('r_last').textContent = d.lstupdt;
+      document.getElementById('r_type').textContent = d.dty;
+      document.getElementById('r_btype').textContent = d.ctb;
+
+      const addr = d.pradr?.addr;
+      document.getElementById('r_address').textContent = addr
+        ? [addr.bno, addr.bnm, addr.st, addr.loc, addr.dst, addr.stcd, addr.pncd].filter(Boolean).join(', ')
+        : '—';
+
+      res.style.display = '';
+      // Add to previous table
+      const tbody = document.querySelector('#prevTable tbody');
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td>${d.gstin}</td><td>${d.lgnm}</td><td>${new Date().toISOString().slice(0,10)}</td>`;
+      tbody.prepend(tr);
+    })
+    .catch(err => {
+      console.error(err);
+      msg.textContent = 'Error fetching GST data.';
+    });
 }
-
-function addRow(){ bodyEl.appendChild(makeRow()); recalc(); }
-
-document.getElementById('addRowBtn').addEventListener('click', addRow);
-
-// PDF: capture full page content (header + card + footer)
-function downloadPDF(){
-  const element = document.getElementById('page');
-  const opt = {
-    margin:       [0.5, 0.5, 0.5, 0.5],
-    filename:     'TDS_GST_Calculator.pdf',
-    image:        { type: 'jpeg', quality: 1 },
-    html2canvas:  { scale: 3, background: '#ffffff' },
-    jsPDF:        { unit: 'in', format: 'a4', orientation: 'portrait' },
-    pagebreak:    { mode: ['css','legacy'] }
-  };
-  html2pdf().set(opt).from(element).save();
-}
-
-document.getElementById('downloadPdfBtn').addEventListener('click', downloadPDF);
-
-// boot with one row
-addRow();
 </script>
 </body>
 </html>
