@@ -1,128 +1,311 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>GST Lookup & Payouts</title>
-  <style>
-    /* Your oceanic theme and layout from before… */
-    body { margin:0; font-family: Inter, sans-serif; background: linear-gradient(180deg,#f2f9ff,#fff); color:#0b2740; }
-    header { background: linear-gradient(90deg,#0b74c4,#065a9e); color:#fff; padding:18px 20px; display:flex; justify-content:space-between; align-items:center; }
-    header h1 { margin:0; font-size:18px; }
-    header .subtitle { font-size:12px; opacity:0.95; }
-    .btn { background:#0b74c4; color:#fff; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:600; }
-    .btn.secondary { background:#eef6fb; color:#065a9e; border:1px solid rgba(11,116,196,0.08); }
-    .container { display:grid; grid-template-columns:1fr 360px; gap:18px; max-width:1100px; margin:20px auto; padding:18px; }
-    .panel { background:#fff; border-radius:8px; padding:16px; box-shadow:0 6px 20px rgba(11,116,196,0.06); }
-    input[type=text] { width:100%; padding:10px; border-radius:8px; border:1px solid #e6eef9; }
-    .muted { font-size:13px; color:#6b7280; }
-    .result-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
-    .field { background:linear-gradient(180deg,#fff,#fbfdff); border-radius:8px; padding:10px; border:1px solid #eef6fb; font-size:13px; }
-    table.prev { width:100%; border-collapse:collapse; font-size:13px; margin-top:12px; }
-    table.prev th, table.prev td { padding:8px; text-align:left; border-bottom:1px dashed #eef6fb; }
-    footer { text-align:center; font-size:13px; color:#6b7280; padding:14px 20px; margin-top:20px; }
-    @media(max-width:980px) { .container { grid-template-columns:1fr; } }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>GST Lookup — Utsaah Tools</title>
+<style>
+  :root{
+    --blue:#0b74c4;
+    --blue-2:#065a9e;
+    --bg:#f7fbff;
+    --card:#ffffff;
+    --muted:#6b7280;
+    --accent:#0b74c4;
+    --radius:8px;
+    font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  html,body { height:100%; margin:0; background:linear-gradient(180deg,#f2f9ff,#ffffff); color:#072033; }
+  header{
+    background: linear-gradient(90deg,var(--blue),var(--blue-2));
+    color:#fff;
+    padding:18px 20px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    box-shadow: 0 6px 18px rgba(6,90,158,0.12);
+  }
+  header h1{ margin:0; font-size:18px; }
+  header .subtitle{ font-size:12px; opacity:.95; }
+  .container{
+    width:100%;
+    max-width:1150px;
+    margin:20px auto;
+    padding:18px;
+    gap:18px;
+    display:grid;
+    grid-template-columns: 1fr 380px;
+  }
+  .panel{
+    background:var(--card);
+    border-radius:var(--radius);
+    padding:16px;
+    box-shadow: 0 6px 20px rgba(11,116,196,0.06);
+  }
+  .search-row{ display:flex; gap:10px; align-items:center; margin-top:12px; }
+  .search-row input[type="text"]{
+    flex:1; padding:12px 14px; border-radius:8px; border:1px solid #e6eef9; font-size:14px;
+  }
+  .btn{
+    background:var(--accent); color:#fff; border:none; padding:10px 12px; border-radius:8px; cursor:pointer; font-weight:700;
+  }
+  .btn.secondary{ background:#eef6fb; color:var(--blue-2); border:1px solid rgba(11,116,196,0.08); }
+  .muted{ color:var(--muted); font-size:13px; }
+  .result-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:12px; }
+  .field{ background:linear-gradient(180deg,#fff,#fbfdff); border-radius:8px; padding:10px; border:1px solid #eef6fb; font-size:13px; min-height:40px; }
+  .full{ grid-column: 1 / -1; }
+  .pre{ white-space:pre-wrap; font-family:monospace; font-size:13px; color:#073047; }
+  table.prev{ width:100%; border-collapse:collapse; margin-top:12px; font-size:13px; }
+  table.prev th, table.prev td{ text-align:left; padding:8px; border-bottom:1px dashed #eef6fb; }
+  footer{ margin-top:20px; padding:14px 20px; text-align:center; color:var(--muted); font-size:13px; }
+  @media (max-width:980px){ .container{ grid-template-columns:1fr; padding:12px; } .full{ grid-column:auto; } }
+</style>
 </head>
 <body>
-<header>
-  <div><h1>GST Lookup & Payouts</h1><div class="subtitle">Software developed by S World — Complete Accounting Solutions</div></div>
-</header>
-
-<main class="container">
-  <!-- Left panel -->
-  <section class="panel">
-    <h3>Search GST Number</h3>
-    <div class="muted">Enter 15-digit GSTIN and press Search.</div>
-    <div style="margin-top:12px;">
-      <input id="gstInput" type="text" placeholder="Example: 06AACCG0527D1Z8" maxlength="15" />
-      <button id="searchBtn" class="btn">Search</button>
+  <header>
+    <div>
+      <h1>GST Lookup & Previous Payouts</h1>
+      <div class="subtitle">Software developed by S World — Complete Accounting Solutions</div>
     </div>
-    <div id="message" class="muted" style="margin-top:10px;"></div>
-    <div id="result" style="display:none; margin-top:14px;">
-      <h4>GST Details</h4>
-      <div class="result-grid">
-        <div class="field"><strong>GSTIN</strong><div id="r_gstin"></div></div>
-        <div class="field"><strong>Legal Name</strong><div id="r_legal"></div></div>
-        <div class="field"><strong>Trade Name</strong><div id="r_trade"></div></div>
-        <div class="field"><strong>Status</strong><div id="r_status"></div></div>
-        <div class="field"><strong>Reg. Date</strong><div id="r_reg"></div></div>
-        <div class="field"><strong>Last Update</strong><div id="r_last"></div></div>
-        <div class="field"><strong>Type</strong><div id="r_type"></div></div>
-        <div class="field"><strong>Business Type</strong><div id="r_btype"></div></div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button id="exportCsv" class="btn secondary">Export CSV</button>
+      <button id="savePdf" class="btn">Save as PDF</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel" id="left">
+      <h3 style="margin:0">Search GST Number</h3>
+      <div class="muted">Enter 15-character GSTIN and press Search. Results fetched from gstincheck (all available fields displayed).</div>
+
+      <div class="search-row">
+        <input id="gstInput" type="text" placeholder="Example: 06AACCG0527D1Z8" maxlength="15" />
+        <button id="searchBtn" class="btn">Search</button>
       </div>
-      <h4 style="margin-top:12px;">Address</h4>
-      <div class="field" id="r_address"></div>
-    </div>
-  </section>
 
-  <!-- Right panel -->
-  <aside class="panel">
-    <h3>Previous Lookups</h3>
-    <table class="prev" id="prevTable">
-      <thead><tr><th>GSTIN</th><th>Legal Name</th><th>Date</th></tr></thead>
-      <tbody></tbody>
-    </table>
-  </aside>
-</main>
+      <div id="message" style="margin-top:10px" class="muted"></div>
 
-<footer>© Utsaah Foundation — built for quick GST checks.</footer>
+      <div id="resultWrap" style="margin-top:14px; display:none;">
+        <h4 style="margin:6px 0 10px 0">GST Details</h4>
+
+        <div class="result-grid">
+          <div class="field"><strong>GSTIN</strong><div id="r_gstin"></div></div>
+          <div class="field"><strong>Legal Name (lgnm)</strong><div id="r_legal"></div></div>
+          <div class="field"><strong>Trade Name (tradeNam)</strong><div id="r_trade"></div></div>
+          <div class="field"><strong>Status (sts)</strong><div id="r_status"></div></div>
+          <div class="field"><strong>Registration Date (rgdt)</strong><div id="r_reg"></div></div>
+          <div class="field"><strong>Last Update (lstupdt)</strong><div id="r_last"></div></div>
+          <div class="field"><strong>Type (dty)</strong><div id="r_type"></div></div>
+          <div class="field"><strong>Business Type (ctb)</strong><div id="r_btype"></div></div>
+
+          <div class="field full"><strong>Nature of Business Activities (nba)</strong><div id="r_nba"></div></div>
+
+          <div class="field"><strong>State Jurisdiction (stj)</strong><div id="r_stj"></div></div>
+          <div class="field"><strong>State Jurisdiction Code (stjCd)</strong><div id="r_stjcd"></div></div>
+          <div class="field"><strong>Centre Jurisdiction (ctj)</strong><div id="r_ctj"></div></div>
+          <div class="field"><strong>Centre Jurisdiction Code (ctjCd)</strong><div id="r_ctjcd"></div></div>
+
+          <div class="field full"><strong>Primary Address (pradr.addr)</strong><div id="r_address" class="pre"></div></div>
+
+          <div class="field"><strong>Frequency (frequencyType)</strong><div id="r_freq"></div></div>
+          <div class="field"><strong>Cxdt</strong><div id="r_cxdt"></div></div>
+          <div class="field"><strong>Error Message (errorMsg)</strong><div id="r_err"></div></div>
+          <div class="field"><strong>Additional Addresses (adadr)</strong><div id="r_adadr" class="pre"></div></div>
+
+          <div class="field full"><strong>Raw JSON (for debugging)</strong><div id="r_raw" class="pre"></div></div>
+        </div>
+
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button id="copyBtn" class="btn secondary">Copy Key Details</button>
+          <button id="addPrevBtn" class="btn">Save to Previous</button>
+        </div>
+      </div>
+    </section>
+
+    <aside class="panel" id="right">
+      <h3 style="margin:0 0 10px 0">Previous Lookups</h3>
+      <div class="muted">Recent validated searches stored locally (localStorage).</div>
+
+      <table class="prev" id="prevTable" aria-label="previous lookups">
+        <thead><tr><th>GSTIN</th><th>Legal Name</th><th>Date</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <hr style="margin:12px 0;border:none;border-top:1px dashed #eef6fb" />
+      <h4 style="margin:0 0 8px 0">Quick Actions</h4>
+      <div style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
+        <button id="clearList" class="btn secondary">Clear List</button>
+      </div>
+    </aside>
+  </main>
+
+  <footer>© Utsaah Foundation — built for quick GST checks.</footer>
 
 <script>
-function validateGSTIN(g) {
+/* ========== CONFIG ========== */
+/* YOUR API KEY HERE (visible in client) */
+const API_KEY = "0a0b020a6c226f0392b26ac877876e19";
+/* Documented endpoint (Postman docs) */
+const API_ENDPOINT_BASE = "https://sheet.gstincheck.co.in/check";
+
+/* ========== UTILITIES ========== */
+function q(id){ return document.getElementById(id); }
+function fmtAddr(addr){
+  if(!addr) return '';
+  const parts = [];
+  ['bno','bnm','st','loc','dst','stcd','pncd'].forEach(k => { if(addr[k]) parts.push(addr[k]); });
+  return parts.join(', ');
+}
+
+/* GSTIN validation per pattern */
+function validateGSTIN(g){
   return /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][1-9A-Z]Z[0-9A-Z]$/.test(g);
 }
 
-document.getElementById('searchBtn').addEventListener('click', searchGST);
-document.getElementById('gstInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') searchGST();
-});
+/* Rate-limit UI (small cooldown) */
+let searchCooldown = false;
+function startCooldown(ms=1500){
+  searchCooldown = true;
+  const btn = q('searchBtn');
+  btn.disabled = true;
+  setTimeout(()=>{ btn.disabled = false; searchCooldown = false; }, ms);
+}
 
-function searchGST() {
-  const gst = document.getElementById('gstInput').value.trim().toUpperCase();
-  const msg = document.getElementById('message');
-  const res = document.getElementById('result');
+/* ========== UI & Storage ========== */
+function loadPrevious(){
+  const data = JSON.parse(localStorage.getItem('prev_gst_lookups') || '[]');
+  const tbody = document.querySelector('#prevTable tbody');
+  tbody.innerHTML = '';
+  data.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${row.gstin}</td><td>${row.lgnm || ''}</td><td>${row.date}</td>`;
+    tbody.appendChild(tr);
+  });
+}
+function savePrevious(record){
+  const arr = JSON.parse(localStorage.getItem('prev_gst_lookups') || '[]');
+  arr.unshift(record);
+  // Keep last 50
+  localStorage.setItem('prev_gst_lookups', JSON.stringify(arr.slice(0,50)));
+  loadPrevious();
+}
 
-  msg.textContent = ''; res.style.display = 'none';
-  if (!validateGSTIN(gst)) {
-    msg.textContent = 'Invalid GSTIN format';
+/* ========== FETCH & RENDER ========== */
+async function searchGST(){
+  if(searchCooldown) return;
+  const raw = q('gstInput').value.trim().toUpperCase();
+  q('message').textContent = '';
+  q('resultWrap').style.display = 'none';
+
+  if(!validateGSTIN(raw)){
+    q('message').textContent = 'Invalid GSTIN format — must be 15 chars and conform to pattern.';
     return;
   }
 
-  fetch(`backend.php?gstin=${gst}`)
-    .then(r => r.json())
-    .then(json => {
-      if (!(json.flag && json.data)) {
-        msg.textContent = json.message || 'Not found';
-        return;
-      }
-      const d = json.data;
-      msg.textContent = '';
-      document.getElementById('r_gstin').textContent = d.gstin;
-      document.getElementById('r_legal').textContent = d.lgnm;
-      document.getElementById('r_trade').textContent = d.tradeNam;
-      document.getElementById('r_status').textContent = d.sts;
-      document.getElementById('r_reg').textContent = d.rgdt;
-      document.getElementById('r_last').textContent = d.lstupdt;
-      document.getElementById('r_type').textContent = d.dty;
-      document.getElementById('r_btype').textContent = d.ctb;
+  startCooldown(1500);
+  q('message').textContent = 'Searching...';
 
-      const addr = d.pradr?.addr;
-      document.getElementById('r_address').textContent = addr
-        ? [addr.bno, addr.bnm, addr.st, addr.loc, addr.dst, addr.stcd, addr.pncd].filter(Boolean).join(', ')
-        : '—';
+  // Build full URL per docs: /check/{apiKey}/{gstin}
+  const url = `${API_ENDPOINT_BASE}/${encodeURIComponent(API_KEY)}/${encodeURIComponent(raw)}`;
 
-      res.style.display = '';
-      // Add to previous table
-      const tbody = document.querySelector('#prevTable tbody');
-      const tr = document.createElement('tr');
-      tr.innerHTML = `<td>${d.gstin}</td><td>${d.lgnm}</td><td>${new Date().toISOString().slice(0,10)}</td>`;
-      tbody.prepend(tr);
-    })
-    .catch(err => {
-      console.error(err);
-      msg.textContent = 'Error fetching GST data.';
-    });
+  try {
+    const res = await fetch(url, { method:'GET', mode:'cors' });
+    if(!res.ok){
+      q('message').textContent = `Lookup failed: HTTP ${res.status}`;
+      q('r_raw').textContent = `HTTP ${res.status} - ${await res.text().catch(()=>res.statusText)}`;
+      return;
+    }
+    const json = await res.json();
+
+    // According to docs: { flag: true/false, message: "...", data: { ... } }
+    if(!json || !json.flag || !json.data){
+      q('message').textContent = json?.message || 'GSTIN not found or API returned no data';
+      q('r_raw').textContent = JSON.stringify(json, null, 2);
+      return;
+    }
+
+    const d = json.data;
+    q('r_gstin').textContent = d.gstin || raw;
+    q('r_legal').textContent = d.lgnm || '';
+    q('r_trade').textContent = d.tradeNam || '';
+    q('r_status').textContent = d.sts || '';
+    q('r_reg').textContent = d.rgdt || '';
+    q('r_last').textContent = d.lstupdt || '';
+    q('r_type').textContent = d.dty || '';
+    q('r_btype').textContent = d.ctb || '';
+    q('r_nba').textContent = Array.isArray(d.nba) ? d.nba.join(', ') : (d.nba || '');
+    q('r_stj').textContent = d.stj || '';
+    q('r_stjcd').textContent = d.stjCd || '';
+    q('r_ctj').textContent = d.ctj || '';
+    q('r_ctjcd').textContent = d.ctjCd || '';
+    q('r_freq').textContent = d.frequencyType || '';
+    q('r_cxdt').textContent = d.cxdt || '';
+    q('r_err').textContent = d.errorMsg || '';
+    if(d.pradr && d.pradr.addr){
+      q('r_address').textContent = fmtAddr(d.pradr.addr);
+    } else {
+      q('r_address').textContent = '';
+    }
+    q('r_adadr').textContent = JSON.stringify(d.adadr || [], null, 2);
+    q('r_raw').textContent = JSON.stringify(json, null, 2);
+
+    q('resultWrap').style.display = '';
+    q('message').textContent = '';
+
+    // Save to previous
+    savePrevious({ gstin: d.gstin || raw, lgnm: d.lgnm || d.tradeNam || '', date: new Date().toISOString().slice(0,10) });
+
+  } catch (err) {
+    console.error(err);
+    q('message').textContent = 'Error fetching GST data — check network, CORS or API key.';
+    q('r_raw').textContent = String(err);
+  }
 }
+
+/* ========== Buttons & Actions ========== */
+document.getElementById('searchBtn').addEventListener('click', searchGST);
+document.getElementById('gstInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') searchGST(); });
+
+document.getElementById('copyBtn').addEventListener('click', ()=>{
+  const txt = [
+    'GSTIN: '+q('r_gstin').textContent,
+    'Legal: '+q('r_legal').textContent,
+    'Trade: '+q('r_trade').textContent,
+    'Status: '+q('r_status').textContent,
+    'Reg Date: '+q('r_reg').textContent,
+    'Address: '+q('r_address').textContent
+  ].join('\\n');
+  navigator.clipboard?.writeText(txt).then(()=> alert('Copied to clipboard'));
+});
+
+document.getElementById('addPrevBtn').addEventListener('click', ()=>{
+  const gstin = q('r_gstin').textContent;
+  if(!gstin) return alert('No data to save');
+  savePrevious({ gstin, lgnm: q('r_legal').textContent, date: new Date().toISOString().slice(0,10) });
+  alert('Saved to previous lookups');
+});
+
+document.getElementById('clearList').addEventListener('click', ()=>{
+  if(confirm('Clear previous lookups?')){ localStorage.removeItem('prev_gst_lookups'); loadPrevious(); }
+});
+
+document.getElementById('exportCsv').addEventListener('click', ()=>{
+  const arr = JSON.parse(localStorage.getItem('prev_gst_lookups') || '[]');
+  if(!arr.length) return alert('No previous lookups to export');
+  const rows = arr.map(r => `"${r.gstin.replace(/"/g,'""')}","${(r.lgnm||'').replace(/"/g,'""')}","${r.date}"`);
+  const csv = ['GSTIN,Legal Name,Date'].concat(rows).join('\\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gst-lookups.csv';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+document.getElementById('savePdf').addEventListener('click', ()=> window.print());
+
+/* init */
+loadPrevious();
 </script>
 </body>
 </html>
