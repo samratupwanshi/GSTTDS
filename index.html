@@ -87,7 +87,7 @@
 <script>
 const API_KEY = "0a0b020a6c226f0392b26ac877876e19";
 
-// Mapping dty codes to readable business types
+// Mapping GST Business Type codes to readable text
 const businessTypeMap = {
     REG: "Regular",
     COM: "Composition",
@@ -122,17 +122,17 @@ function searchGST() {
             return;
         }
 
-        const d = data.data;
-        const businessType = businessTypeMap[d.dty] || d.dty || "N/A";
+        const details = data.data;
+        const businessType = businessTypeMap[details.dty] || details.dty || "N/A";
 
         let output = `
           <table>
-            <tr><th>GSTIN</th><td>${d.gstin || "N/A"}</td></tr>
-            <tr><th>Trade Name</th><td>${d.tradeNam || "N/A"}</td></tr>
-            <tr><th>Legal Name</th><td>${d.lgnm || "N/A"}</td></tr>
-            <tr><th>Status</th><td>${d.sts || "N/A"}</td></tr>
-            <tr><th>Registration Date</th><td>${formatDate(d.rgdt)}</td></tr>
-            <tr><th>Type</th><td>${d.ctb || "N/A"}</td></tr>
+            <tr><th>GSTIN</th><td>${details.gstin}</td></tr>
+            <tr><th>Trade Name</th><td>${details.tradeNam || "N/A"}</td></tr>
+            <tr><th>Legal Name</th><td>${details.lgnm || "N/A"}</td></tr>
+            <tr><th>Status</th><td>${details.sts || "N/A"}</td></tr>
+            <tr><th>Registration Date</th><td>${formatDate(details.rgdt)}</td></tr>
+            <tr><th>Type</th><td>${details.ctb || "N/A"}</td></tr>
             <tr><th>Business Type</th><td>${businessType}</td></tr>
           </table>
         `;
@@ -146,11 +146,8 @@ function searchGST() {
 
 function formatDate(dateStr) {
     if (!dateStr) return "N/A";
-    if (dateStr.includes("-")) {
-        const [year, month, day] = dateStr.split("-");
-        return `${day}-${month}-${year}`;
-    }
-    return dateStr;
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
 }
 </script>
 </body>
