@@ -5,73 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>GST Search Tool</title>
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #f4f9ff;
-    margin: 0;
-    padding: 0;
-  }
-  header {
-    background-color: #0b74c4;
-    color: white;
-    text-align: center;
-    padding: 15px;
-    font-size: 22px;
-    font-weight: bold;
-  }
-  .container {
-    max-width: 600px;
-    background: white;
-    margin: 30px auto;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0px 0px 15px rgba(0,0,0,0.1);
-  }
-  label {
-    font-weight: bold;
-    display: block;
-    margin-bottom: 8px;
-  }
-  input {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-    font-size: 16px;
-    text-transform: uppercase;
-  }
-  button {
-    background-color: #0b74c4;
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    font-size: 16px;
-    border-radius: 5px;
-    cursor: pointer;
-  }
-  button:hover {
-    background-color: #065a9e;
-  }
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
-  }
-  th, td {
-    text-align: left;
-    padding: 8px;
-    border-bottom: 1px solid #ddd;
-  }
-  footer {
-    text-align: center;
-    padding: 15px;
-    background-color: #0b74c4;
-    color: white;
-    position: fixed;
-    width: 100%;
-    bottom: 0;
-  }
+  body { font-family: Arial, sans-serif; background-color: #f4f9ff; margin: 0; padding: 0; }
+  header { background-color: #0b74c4; color: white; text-align: center; padding: 15px; font-size: 22px; font-weight: bold; }
+  .container { max-width: 600px; background: white; margin: 30px auto; padding: 20px; border-radius: 8px; box-shadow: 0px 0px 15px rgba(0,0,0,0.1); }
+  label { font-weight: bold; display: block; margin-bottom: 8px; }
+  input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; font-size: 16px; text-transform: uppercase; }
+  button { background-color: #0b74c4; color: white; border: none; padding: 10px 15px; font-size: 16px; border-radius: 5px; cursor: pointer; }
+  button:hover { background-color: #065a9e; }
+  table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+  th, td { text-align: left; padding: 8px; border-bottom: 1px solid #ddd; }
+  footer { text-align: center; padding: 15px; background-color: #0b74c4; color: white; position: fixed; width: 100%; bottom: 0; }
 </style>
 </head>
 <body>
@@ -87,7 +30,7 @@
 <script>
 const API_KEY = "0a0b020a6c226f0392b26ac877876e19";
 
-// Mapping GST Business Type codes to readable text
+// Safe mapping of GST Business Type codes
 const businessTypeMap = {
     REG: "Regular",
     COM: "Composition",
@@ -122,17 +65,19 @@ function searchGST() {
             return;
         }
 
-        const details = data.data;
-        const businessType = businessTypeMap[details.dty] || details.dty || "N/A";
+        const d = data.data;
+
+        // Map Business Type safely
+        const businessType = d.dty ? (businessTypeMap[d.dty] || d.dty) : "N/A";
 
         let output = `
           <table>
-            <tr><th>GSTIN</th><td>${details.gstin}</td></tr>
-            <tr><th>Trade Name</th><td>${details.tradeNam || "N/A"}</td></tr>
-            <tr><th>Legal Name</th><td>${details.lgnm || "N/A"}</td></tr>
-            <tr><th>Status</th><td>${details.sts || "N/A"}</td></tr>
-            <tr><th>Registration Date</th><td>${formatDate(details.rgdt)}</td></tr>
-            <tr><th>Type</th><td>${details.ctb || "N/A"}</td></tr>
+            <tr><th>GSTIN</th><td>${d.gstin || "N/A"}</td></tr>
+            <tr><th>Trade Name</th><td>${d.tradeNam || "N/A"}</td></tr>
+            <tr><th>Legal Name</th><td>${d.lgnm || "N/A"}</td></tr>
+            <tr><th>Status</th><td>${d.sts || "N/A"}</td></tr>
+            <tr><th>Registration Date</th><td>${d.rgdt ? formatDate(d.rgdt) : "N/A"}</td></tr>
+            <tr><th>Type</th><td>${d.ctb || "N/A"}</td></tr>
             <tr><th>Business Type</th><td>${businessType}</td></tr>
           </table>
         `;
@@ -146,8 +91,11 @@ function searchGST() {
 
 function formatDate(dateStr) {
     if (!dateStr) return "N/A";
-    const [year, month, day] = dateStr.split("-");
-    return `${day}-${month}-${year}`;
+    if (dateStr.includes("-")) {
+        const [year, month, day] = dateStr.split("-");
+        return `${day}-${month}-${year}`;
+    }
+    return dateStr;
 }
 </script>
 </body>
