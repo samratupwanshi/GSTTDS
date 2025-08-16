@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GST Invoice Generator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<style>
+    body { font-family: Arial; background: #f2f6fc; color: #0b74c4; margin:0; padding:0;}
+    .container { max-width: 800px; margin:10px auto; background:#fff; padding:20px; border-radius:8px; box-shadow:0 0 10px #ccc; }
+    h2, h3 { text-align:center; color:#065a9e; }
+    input, select { padding:6px; margin:3px 0; width:100%; border-radius:4px; border:1px solid #ccc; }
+    table { width:100%; border-collapse:collapse; margin-top:10px; }
+    th, td { border:1px solid #0b74c4; padding:6px; text-align:center; }
+    th { background:#0b74c4; color:#fff; }
+    .btn { background:#065a9e; color:#fff; padding:8px 12px; border:none; border-radius:4px; margin-top:10px; cursor:pointer; }
+    .btn:hover { background:#0b4a7a; }
+    footer { text-align:center; font-size:12px; color:#333; position:fixed; bottom:0; width:100%; background:#f2f6fc; padding:5px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+<h2>GST Invoice Generator</h2>
+
+<h3>Seller Details</h3>
+<input type="text" id="sellerName" placeholder="Seller Name">
+<input type="text" id="sellerGST" placeholder="GSTIN">
+<input type="text" id="sellerAddress" placeholder="Address">
+<input type="text" id="sellerState" placeholder="State">
+
+<h3>Buyer Details</h3>
+<input type="text" id="buyerName" placeholder="Buyer Name">
+<input type="text" id="buyerGST" placeholder="GSTIN">
+<input type="text" id="buyerAddress" placeholder="Address">
+<input type="text" id="buyerState" placeholder="State">
+
+<h3>Invoice Items</h3>
+<table id="itemsTable">
+<thead>
+<tr>
+<th>Item Name</th>
+<th>GST Rate</th>
+<th>Quantity</th>
+<th>Price (Inclusive of GST)</th>
+<th>Basic Price</th>
+<th>SGST</th>
+<th>CGST</th>
+<th>IGST</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><input type="text" class="itemName"></td>
+<td>
+<select class="gstRate">
+<option value="0">Nil</option>
+<option value="5">5%</option>
+<option value="12">12%</option>
+<option value="18">18%</option>
+<option value="28">28%</option>
+</select>
+</td>
+<td><input type="number" class="quantity" value="1" min="1"></td>
+<td><input type="number" class="price" value="0" min="0"></td>
+<td class="basicPrice">0</td>
+<td class="sgst">0</td>
+<td class="cgst">0</td>
+<td class="igst">0</td>
+<td class="total">0</td>
+</tr>
+</tbody>
+</table>
+
+<button class="btn" onclick="addItem()">Add Item</button>
+<button class="btn" onclick="generatePDF()">Generate PDF</button>
+</div>
+
+<footer>Software developed by S World - The Complete Accounting Solutions</footer>
+
+<script>
+function addItem(){
+    const table=document.getElementById('itemsTable').getElementsByTagName('tbody')[0];
+    const row=table.insertRow();
+    row.innerHTML=`
+<td><input type="text" class="itemName"></td>
+<td>
+<select class="gstRate">
+<option value="0">Nil</option>
+<option value="5">5%</option>
+<option value="12">12%</option>
+<option value="18">18%</option>
+<option value="28">28%</option>
+</select>
+</td>
+<td><input type="number" class="quantity" value="1" min="1"></td>
+<td><input type="number" class="price" value="0" min="0"></td>
+<td class="basicPrice">0</td>
+<td class="sgst">0</td>
+<td class="cgst">0</td>
+<td class="igst">0</td>
+<td class="total">0</td>
+`;
+}
+
+function calculateInvoice(){
+    const sellerState=document.getElementById('sellerState').value.trim().toLowerCase();
+    const buyerState=document.getElementById('buyerState').value.trim().toLowerCase();
+    const isSameState=sellerState && buyerState && sellerState===buyerState;
+
+    const rows=document.querySelectorAll('#itemsTable tbody tr');
+    rows.forEach(row=>{
+        const qty=parseFloat(row.querySelector('.quantity').value)||0;
+        const priceInclusive=parseFloat(row.querySelector('.price').value)||0;
+        const gstRate=parseFloat(row.querySelector('.gstRate').value)||0;
+
+        let basic=gstRate>0? priceInclusive/(1+gstRate/100) : priceInclusive;
+        basic=parseFloat(basic.toFixed(2));
+
+        let gstAmount=(priceInclusive-basic).toFixed(2);
+        let sgst=0,cgst=0,igst=0;
+        if(gstRate===0){
+            sgst=cgst=igst=0;
+        } else if(isSameState){
+            sgst=cgst=parseFloat(gstAmount/2).toFixed(2);
+            igst=0;
+        } else{
+            igst=parseFloat(gstAmount).toFixed(2);
+            sgst=cgst=0;
+        }
+        const total=(priceInclusive*qty).toFixed(2);
+
+        row.querySelector('.basicPrice').textContent=basic;
+        row.querySelector('.sgst').textContent=sgst;
+        row.querySelector('.cgst').textContent=cgst;
+        row.querySelector('.igst').textContent=igst;
+        row.querySelector('.total').textContent=total;
+    });
+}
+
+document.addEventListener('input', calculateInvoice);
+document.addEventListener('change', calculateInvoice);
+
+function generatePDF(){
+    calculateInvoice(); // ensure latest calculations
+    const { jsPDF }=window.jspdf;
+    const doc=new jsPDF('p','pt','a4');
+    let y=20;
+
+    const sellerName=document.getElementById('sellerName').value;
+    const sellerGST=document.getElementById('sellerGST').value;
+    const sellerAddress=document.getElementById('sellerAddress').value;
+    const sellerState=document.getElementById('sellerState').value;
+
+    const buyerName=document.getElementById('buyerName').value;
+    const buyerGST=document.getElementById('buyerGST').value;
+    const buyerAddress=document.getElementById('buyerAddress').value;
+    const buyerState=document.getElementById('buyerState').value;
+
+    doc.setFontSize(14);
+    doc.text('GST INVOICE', 250, y);
+    y+=30;
+    doc.setFontSize(10);
+    doc.text(`Seller: ${sellerName}`,20,y); y+=15;
+    doc.text(`GSTIN: ${sellerGST}`,20,y); y+=15;
+    doc.text(`Address: ${sellerAddress}`,20,y); y+=15;
+    doc.text(`State: ${sellerState}`,20,y); y+=20;
+    doc.text(`Buyer: ${buyerName}`,20,y); y+=15;
+    doc.text(`GSTIN: ${buyerGST}`,20,y); y+=15;
+    doc.text(`Address: ${buyerAddress}`,20,y); y+=15;
+    doc.text(`State: ${buyerState}`,20,y); y+=20;
+
+    const rows=[];
+    document.querySelectorAll('#itemsTable tbody tr').forEach(tr=>{
+        const cells=[
+            tr.querySelector('.itemName').value,
+            tr.querySelector('.gstRate').value+'%',
+            tr.querySelector('.quantity').value,
+            tr.querySelector('.price').value,
+            tr.querySelector('.basicPrice').textContent,
+            tr.querySelector('.sgst').textContent,
+            tr.querySelector('.cgst').textContent,
+            tr.querySelector('.igst').textContent,
+            tr.querySelector('.total').textContent
+        ];
+        rows.push(cells);
+    });
+
+    doc.autoTable({
+        head:[['Item','GST','Qty','Price Incl. GST','Basic','SGST','CGST','IGST','Total']],
+        body:rows,
+        startY:y,
+        theme:'grid',
+        headStyles:{ fillColor:[11,116,196] }
+    });
+
+    doc.save('GST_Invoice.pdf');
+}
+</script>
+</body>
+</html>
