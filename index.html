@@ -28,16 +28,7 @@
   <footer>Software developed by S World The Complete Accounting Solutions</footer>
 
 <script>
-const API_KEY = "0a0b020a6c226f0392b26ac877876e19";
-
-// Mapping GST Business Type codes to readable text
-const businessTypeMap = {
-    REG: "Regular",
-    COM: "Composition",
-    UNR: "Unregistered",
-    SEZ: "SEZ",
-    TDS: "TDS Deductor"
-};
+const API_KEY = "pr5YS9ROBdVeAAKGzOBaWdZV3fu1"; // Your Appyflow API key
 
 function searchGST() {
     const gstin = document.getElementById("gstin").value.trim().toUpperCase();
@@ -51,22 +42,24 @@ function searchGST() {
 
     resultDiv.innerHTML = "<p>Loading...</p>";
 
-    fetch(`https://api.gstincheck.co.in/gstin/${gstin}`, {
-        method: "GET",
+    fetch("https://appyflow.in/api/verifyGST", {
+        method: "POST",
         headers: {
-            "accept": "application/json",
-            "X-API-KEY": API_KEY
-        }
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            gstNo: gstin,
+            key_secret: API_KEY
+        })
     })
     .then(response => response.json())
     .then(data => {
-        if (data.flag !== "1" || !data.data) {
-            resultDiv.innerHTML = "<p style='color:red;'>GSTIN not found or inactive.</p>";
+        if (data.error) {
+            resultDiv.innerHTML = `<p style='color:red;'>Error: ${data.message}</p>`;
             return;
         }
 
         const details = data.data;
-
         let output = `
           <table>
             <tr><th>GSTIN</th><td>${details.gstin || "N/A"}</td></tr>
@@ -75,7 +68,7 @@ function searchGST() {
             <tr><th>Status</th><td>${details.sts || "N/A"}</td></tr>
             <tr><th>Registration Date</th><td>${details.rgdt ? formatDate(details.rgdt) : "N/A"}</td></tr>
             <tr><th>Type</th><td>${details.ctb || "N/A"}</td></tr>
-            <tr><th>Business Type</th><td>${details.dty ? (businessTypeMap[details.dty] || details.dty) : "N/A"}</td></tr>
+            <tr><th>Business Type</th><td>${details.dty || "N/A"}</td></tr>
           </table>
         `;
         resultDiv.innerHTML = output;
@@ -88,11 +81,8 @@ function searchGST() {
 
 function formatDate(dateStr) {
     if (!dateStr) return "N/A";
-    if (dateStr.includes("-")) {
-        const [year, month, day] = dateStr.split("-");
-        return `${day}-${month}-${year}`;
-    }
-    return dateStr;
+    const [year, month, day] = dateStr.split("-");
+    return `${day}-${month}-${year}`;
 }
 </script>
 </body>
